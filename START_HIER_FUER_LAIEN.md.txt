@@ -1,0 +1,120 @@
+# GitHub Schritt für Schritt (für absolute Einsteiger)
+
+Keine Sorge: Du musst dich nicht entschuldigen. Das ist normal. 🙌
+
+Diese Anleitung zeigt dir **ganz konkret**, wie du die Dateien aus diesem Projekt auf GitHub bringst und später laufen lässt.
+
+---
+
+## Was ist hier überhaupt passiert?
+
+In diesem Projekt liegen jetzt u. a. diese Dateien:
+
+- `START_HIER_FUER_LAIEN.md` → einfache Anleitung zum Ausführen des Probe-Scripts
+- `VORARBEIT_SBB_VERKUERZTE_ZUEGE.md` → Recherche-Notizen / Methodik
+- `tools/probe_sbb_verkurzt.py` → das eigentliche Probe-Programm
+
+Du kannst diese Dateien **1:1 in ein GitHub-Repository übernehmen**.
+
+---
+
+## Variante A (einfach): Du nutzt dieses bestehende Git-Repo weiter
+
+Wenn dir jemand den Zugriff auf dieses Repo gibt (oder es bereits dein Repo ist), machst du normalerweise:
+
+```bash
+git push
+```
+
+Das lädt die lokalen Änderungen zu GitHub hoch.
+
+> Falls `git push` einen Fehler zeigt (z. B. keine Rechte), nutze Variante B.
+
+---
+
+## Variante B (sicher für Anfänger): Neues GitHub-Repo erstellen und Dateien hochladen
+
+## 1) Neues Repository auf GitHub anlegen
+
+1. Gehe auf https://github.com
+2. Klicke oben rechts auf **+** → **New repository**
+3. Name z. B. `sbb-verkuerzt-recherche`
+4. Wähle **Public** oder **Private**
+5. Klicke **Create repository**
+
+## 2) Repo lokal mit deinem neuen GitHub-Repo verbinden
+
+Im Terminal im Projektordner:
+
+```bash
+git remote remove origin 2>/dev/null || true
+git remote add origin https://github.com/DEIN_NAME/sbb-verkuerzt-recherche.git
+git branch -M main
+git push -u origin main
+```
+
+Danach sind die Dateien auf GitHub sichtbar.
+
+---
+
+## Wie du die Dateien auf GitHub „einbaust“ (ohne Terminal)
+
+Wenn du gar kein Terminal nutzen willst:
+
+1. Öffne dein GitHub-Repository im Browser
+2. Klicke **Add file** → **Upload files**
+3. Ziehe diese Dateien per Drag & Drop hinein:
+   - `START_HIER_FUER_LAIEN.md`
+   - `VORARBEIT_SBB_VERKUERZTE_ZUEGE.md`
+   - Ordner `tools/` mit `probe_sbb_verkurzt.py`
+4. Unten eine Commit-Nachricht schreiben (z. B. „Add SBB probe")
+5. **Commit changes** klicken
+
+Fertig.
+
+---
+
+## Was du danach konkret tun musst
+
+1. Öffne auf deinem Computer ein Terminal im Projektordner.
+2. Installiere einmalig:
+
+```bash
+python3 -m pip install playwright
+python3 -m playwright install chromium
+```
+
+3. Kopiere eine SBB-Fahrplan-URL (aus dem Browser).
+4. Starte den Probe-Lauf:
+
+```bash
+python3 tools/probe_sbb_verkurzt.py --url "DEINE_SBB_URL"
+```
+
+5. Ergebnis lesen in:
+
+- `artifacts/sbb_probe.json`
+
+Wenn dort steht:
+
+- `"match": true` → Hinweis gefunden
+- `"match": false` → Hinweis nicht gefunden
+
+---
+
+## Typische Fragen
+
+## „Kann ich das einfach bei GitHub einbauen?“
+Ja. Die Dateien sind normale Text-/Python-Dateien und können direkt hochgeladen werden.
+
+## „Muss ich programmieren können?“
+Nein. Für den ersten Test reichen die copy-paste-Befehle oben.
+
+## „Was mache ich mit den Ausgaben?“
+Die JSON-Dateien sammelst du als Belege. Später können wir daraus eine Tabelle bauen (CSV/SQLite), um zu zählen, wie oft „verkürzt geführt“ vorkommt.
+
+---
+
+## Wenn du willst, nächster Schritt
+
+Ich kann dir als Nächstes ein Skript bauen, das automatisch viele Relationen prüft (z. B. alle 10 Minuten) und dir am Ende eine fertige CSV-Liste für deine Recherche ausgibt.

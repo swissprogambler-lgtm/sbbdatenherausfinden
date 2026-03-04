@@ -1,0 +1,107 @@
+# Vorarbeit: SBB-Recherche zu „verkürzt geführten“ Zügen
+
+## Kurzfazit
+Ja, die Information ist mit hoher Wahrscheinlichkeit maschinell erfassbar – aber **nicht unbedingt über eine offiziell dokumentierte Public-API**. In der Praxis gibt es zwei realistische Wege:
+
+1. **Browser-basiertes Crawling der Online-Fahrplan-Auskunft** (Playwright/Selenium), inklusive Extraktion von Meldungen wie „Dieser Zug wird verkürzt geführt“.  
+2. **API-first über Transportdaten-Partnerzugänge** (z. B. opentransportdata.swiss / Betriebsdaten-Feeds), falls Zugang zu den passenden Echtzeit-/Störungsfeeds möglich ist.
+
+Für einen schnellen journalistischen MVP ist Weg 1 meist am schnellsten. Für robuste, langfristige Datenerhebung ist Weg 2 sauberer.
+
+---
+
+## Was du technisch suchen musst
+Der Satz „Dieser Zug wird verkürzt geführt“ ist typischerweise ein **Journey-/Service-Hinweis** (Remark/Alert), nicht nur reiner Fahrplanstamm.
+
+Für den Crawler brauchst du pro gefundener Meldung mindestens:
+
+- `abfragezeitpunkt` (wann gecrawlt)
+- `betriebstag`
+- `linie` / `zugnummer`
+- `von` / `nach` (Relation)
+- `plan_abfahrt`
+- `meldungs_text` (Originalwortlaut)
+- optional: `meldungs_typ`, `gueltig_ab`, `gueltig_bis`, `quelle`
+
+Damit kannst du später sauber zählen, deduplizieren und Trends zeigen.
+
+---
+
+## Datenquellen: realistische Einschätzung
+
+## A) SBB-Web-Fahrplan (Crawler)
+**Pro:**
+- Die gesuchte Formulierung ist bereits sichtbar.
+- Kein Data-Access-Vertrag nötig für einen ersten Test.
+
+**Contra/Risiko:**
+- Selektoren/DOM/API-Aufrufe können sich ändern.
+- Rate-Limits / Bot-Schutz / rechtliche Abklärung (Nutzungsbedingungen) beachten.
+
+**Empfehlung:**
+- Erst einen kleinen, defensiven Crawler bauen (wenige Relationen, klarer Crawl-Intervall).
+- Rohdaten speichern (JSON + Screenshot bei Treffer) für spätere Verifikation.
+
+## B) Transportdaten-Feeds (API-first)
+**Pro:**
+- Robuster bei längerer Laufzeit.
+- Bessere Struktur für Analysen.
+
+**Contra:**
+- Zugriff nicht immer sofort offen bzw. ggf. eingeschränkt.
+- Manchmal sind genau solche kundenrelevanten Texte nur in bestimmten Feeds/Produkten enthalten.
+
+**Empfehlung:**
+- Parallel prüfen, ob die gewünschte Meldung in zugänglichen Echtzeit-/Störungsdaten enthalten ist.
+
+---
+
+## MVP-Strategie (journalistisch sinnvoll)
+
+1. **Pilot-Stichprobe definieren**
+   - 10–20 stark frequentierte Relationen (z. B. Luzern–Zürich, Bern–Zürich, Lausanne–Genève).
+   - Zeitfenster mit hoher Belastung (Pendlerzeiten + Wochenende).
+
+2. **Crawler im 5–10-Minuten-Takt**
+   - Query pro Relation und Zeitfenster.
+   - Bei jedem Treffer auf „verkürzt geführt“: Datensatz + Roh-HTML/JSON-Snapshot speichern.
+
+3. **Deduplizierung**
+   - Schlüssel z. B. aus `betriebstag + zugnummer + plan_abfahrt + relation`.
+   - Mehrfache Sichtungen derselben Fahrt nur einmal zählen.
+
+4. **Qualitätssicherung**
+   - Stichproben manuell mit sichtbarer Webanzeige gegenprüfen.
+   - Fehlerquote dokumentieren.
+
+5. **Auswertung**
+   - Anteil betroffener Verbindungen pro Relation/Tag/Uhrzeit.
+   - Trend (Woche/Monat), Hotspots, Ausreißer-Tage.
+
+---
+
+## Rechtlich/ethisch (kurz)
+- Nutzungsbedingungen der Datenquelle prüfen (insb. automatisierter Zugriff).
+- Crawler freundlich konfigurieren (Rate-Limit, Retry mit Backoff, keine Lastspitzen).
+- Transparenz in der Methodik: Erhebungsfenster, Stichprobe, bekannte Lücken.
+
+---
+
+## Nächster Schritt für Codex
+Du kannst Codex direkt beauftragen mit:
+
+- Aufbau eines Playwright-Crawlers (Python), der
+  - Verbindungen abfragt,
+  - Meldungstexte extrahiert,
+  - Treffer in CSV/SQLite speichert,
+  - optional Screenshots bei Treffern erzeugt.
+- plus Analyse-Skript, das pro Woche/Relation Kennzahlen berechnet.
+
+Praktischer Prompt:
+
+> „Baue mir einen robusten Python-Playwright-Crawler für den SBB-Onlinefahrplan. Ziel: Meldungen mit ‘verkürzt geführt’ erkennen und in SQLite speichern. Bitte mit Retry/Backoff, Deduplizierung, Logging und CSV-Export. Ergänze ein Auswertungsskript mit Kennzahlen pro Relation und Tag.“
+
+---
+
+## Hinweis zur hiesigen Umgebung
+In dieser Laufzeitumgebung war der direkte Zugriff auf SBB/Transport-HTTP-Endpunkte technisch eingeschränkt (403 über Proxy). Deshalb ist die Vorarbeit methodisch und architektonisch ausgearbeitet; die Live-Validierung sollte in deiner eigenen Umgebung erfolgen.
